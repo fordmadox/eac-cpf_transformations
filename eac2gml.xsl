@@ -22,12 +22,23 @@
 
     <xsl:variable name="elements">
         <xsl:for-each select="eacFiles/eacFile">
-            <xsl:for-each select="document(@filename)/eac-cpf//nameEntry[1]/part[.!='']"
+            <xsl:for-each select="document(@filename)/eac-cpf//nameEntry[1][part[.!='']]"
                 xpath-default-namespace="urn:isbn:1-931666-33-4">
                 <entry>
-                    <name>
-                        <xsl:value-of select="normalize-space(.)"/>
-                    </name>
+                    <xsl:choose>
+                        <xsl:when test="count(part)=1">
+                            <name>
+                                <xsl:value-of select="normalize-space(part)"/>
+                            </name>
+                        </xsl:when>
+                        <xsl:when test="part[@localType='surname'] and part[@localType='forename']">
+                            <name>
+                                <xsl:value-of
+                                    select="concat(normalize-space(part[@localType='surname']),', ',normalize-space(part[@localType='forename']))"
+                                />
+                            </name>
+                        </xsl:when>
+                    </xsl:choose>
                     <xsl:for-each select="//cpfRelation/relationEntry[.!='']">
                         <relation>
                             <xsl:value-of select="normalize-space(.)"/>
@@ -101,7 +112,6 @@
             <xsl:text>&#10;</xsl:text>
         </xsl:for-each>
         <xsl:for-each-group select="$links/links/source" group-by="@name">
-            <xsl:variable name="posCount" select="position()-1"/>
             <xsl:for-each select="current-group()/node()">
                 <xsl:variable name="targetVal" select="../@target"/>
                 <xsl:text>&#09;</xsl:text>
