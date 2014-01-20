@@ -25,11 +25,11 @@
             <xsl:for-each select="document(@filename)/eac-cpf//nameEntry[1]/part[.!='']"
                 xpath-default-namespace="urn:isbn:1-931666-33-4">
                 <entry>
-                    <name type="name">
+                    <name>
                         <xsl:value-of select="normalize-space(.)"/>
                     </name>
                     <xsl:for-each select="//cpfRelation/relationEntry[.!='']">
-                        <relation type="relation">
+                        <relation>
                             <xsl:value-of select="normalize-space(.)"/>
                         </relation>
                     </xsl:for-each>
