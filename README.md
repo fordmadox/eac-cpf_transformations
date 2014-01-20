@@ -17,7 +17,7 @@ The eac2gml.xsl stylesheet takes an XML-formatted list of EAC-CPF files (created
 
 ### 1.2 Generate a list of EAC-CPF files
 
-   Run eacFileListGenerator.xsl on a directory of EAC-CPF files (the stylesheet may be saved in the same directory as the files or in a different directory) and save the XML output.
+   Run eacFileListGenerator.xsl on a directory of EAC-CPF files. The stylesheet may be saved in the same directory as the files or in a different directory (if it is saved in a different directory, the $pDirectory parameter should be updated accordingly). Save the XML output.
    
 ### 1.3 Run the transformation
 
