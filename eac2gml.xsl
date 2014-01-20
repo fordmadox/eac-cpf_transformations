@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema" exclude-result-prefixes="xs" version="2.0">
-    <xsl:output method="text" encoding="UTF-8"/>
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" exclude-result-prefixes="xs xlink" version="2.0">
+    <xsl:output method="xml" encoding="UTF-8"/>
 
     <!--
         Copyright 2014 Timothy A. Thompson        
@@ -18,9 +18,10 @@
     <xsl:variable name="apos">'</xsl:variable>
     <xsl:variable name="quot">"</xsl:variable>
     
-    <xsl:param name="URI">false</xsl:param>
+    <xsl:param name="URI">true</xsl:param>
 
     <xsl:key name="listKey" match="item" use="@name"/>
+    <xsl:key name="listKeyUri" match="item" use="@uri"/>
 
     <xsl:variable name="elements">
         <xsl:for-each select="eacFiles/eacFile">
@@ -29,15 +30,33 @@
                 <entry>
                     <xsl:choose>
                         <xsl:when test="$URI='true'">
-                            <name>
-                                <xsl:value-of select="//recordId[.!='']"/>                               
-                            </name>
+                            <xsl:choose>
+                                <xsl:when test="count(part)=1">
+                                    <name>
+                                        <xsl:value-of select="concat(normalize-space(part),'|',//otherRecordId[.!=''])"/>
+                                    </name>
+                                </xsl:when>
+                                <xsl:when test="count(part)&gt;1">
+                                    <name uri="{//recordId[.!='']}">                                        
+                                        <xsl:for-each select="part">                                            
+                                            <xsl:choose>
+                                                <xsl:when test="position()!=last()">
+                                                    <xsl:value-of select="."/>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+                                                    <xsl:value-of select="concat(normalize-space(.),'|',//otherRecordId[.!=''])"/>
+                                                </xsl:otherwise>
+                                            </xsl:choose>
+                                        </xsl:for-each>
+                                    </name>
+                                </xsl:when>        
+                            </xsl:choose>                            
                             <xsl:for-each select="//cpfRelation/relationEntry[.!='']">
                                 <relation>
-                                    <xsl:value-of select="normalize-space(../@xlink:href)"/>
+                                    <xsl:value-of select="concat(normalize-space(.),'|',normalize-space(../@xlink:href))"/>
                                 </relation>
                             </xsl:for-each>
-                        </xsl:when>
+                        </xsl:when>                        
                         <xsl:otherwise>
                             <xsl:choose>
                                 <xsl:when test="count(part)=1">
@@ -76,10 +95,19 @@
         <list>
             <xsl:for-each-group select="$elements/entry" group-by="child::node()">
                 <xsl:sort select="translate(current-grouping-key(),'ÁÉÍÓÚáéíóúÜú','AEIUOaeiouUu')"
-                    data-type="text"/>
-                <item name="{current-grouping-key()}">
-                    <xsl:value-of select="position()-1"/>
-                </item>
+                    data-type="text"/>                
+                <xsl:choose>
+                    <xsl:when test="$URI='true'">
+                        <item name="{substring-before(current-grouping-key(),'|')}" uri="{substring-after(current-grouping-key(),'|')}">
+                            <xsl:value-of select="position()-1"/>
+                        </item>        
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <item name="{current-grouping-key()}">
+                            <xsl:value-of select="position()-1"/>
+                        </item>
+                    </xsl:otherwise>
+                </xsl:choose>                
             </xsl:for-each-group>
         </list>
     </xsl:variable>
@@ -88,21 +116,48 @@
         <links>
             <xsl:for-each-group select="$elements/entry/name" group-by="following-sibling::relation">
                 <xsl:variable name="posCount" select="position()-1"/>
-                <xsl:for-each select="current-group()/node()">
-                    <xsl:variable name="nameVal" select="."/>
-                    <xsl:variable name="relationVal" select="current-grouping-key()"/>
-                    <xsl:for-each select="$list">
-                        <source name="{key('listKey',$nameVal)/@name}"
-                            target="{key('listKey',$relationVal)}">
-                            <xsl:value-of select="$posCount"/>
-                        </source>
-                    </xsl:for-each>
-                </xsl:for-each>
+                <xsl:choose>
+                    <xsl:when test="$URI='true'">
+                        <xsl:for-each select="current-group()/node()">
+                            <xsl:variable name="nameVal" select="substring-before(.,'|')"/>
+                            <xsl:variable name="uriVal">
+                                <xsl:choose>
+                                    <xsl:when test=".">
+                                        <xsl:value-of select="substring-after(.,'|')"/>
+                                    </xsl:when>
+                                    <xsl:when test="current-grouping-key()">
+                                        <xsl:value-of select="substring-after(.,'|')"/>
+                                    </xsl:when>
+                                </xsl:choose>
+                            </xsl:variable>
+                            <xsl:variable name="relationVal" select="substring-before(current-grouping-key(),'|')"/>
+                            <xsl:for-each select="$list">
+                                <source name="{key('listKey',$nameVal)/@name}"
+                                    target="{key('listKeyUri',$uriVal)}">
+                                    <xsl:value-of select="$posCount"/>
+                                </source>
+                            </xsl:for-each>
+                        </xsl:for-each>        
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:for-each select="current-group()/node()">
+                            <xsl:variable name="nameVal" select="."/>
+                            <xsl:variable name="relationVal" select="current-grouping-key()"/>
+                            <xsl:for-each select="$list">
+                                <source name="{key('listKey',$nameVal)/@name}"
+                                    target="{key('listKey',$relationVal)}">
+                                    <xsl:value-of select="$posCount"/>
+                                </source>
+                            </xsl:for-each>
+                        </xsl:for-each>
+                    </xsl:otherwise>
+                </xsl:choose>                                
             </xsl:for-each-group>
         </links>
     </xsl:variable>
 
     <xsl:template match="/">
+        <!--
         <xsl:text>graph</xsl:text>
         <xsl:text>&#10;</xsl:text>
         <xsl:text>[</xsl:text>
@@ -169,6 +224,11 @@
             </xsl:for-each>
         </xsl:for-each-group>
         <xsl:text>]</xsl:text>
+        -->
+        <root>
+        <xsl:copy-of select="$list"></xsl:copy-of>
+        <xsl:copy-of select="$links"></xsl:copy-of>
+        </root>
     </xsl:template>
 
 </xsl:stylesheet>
