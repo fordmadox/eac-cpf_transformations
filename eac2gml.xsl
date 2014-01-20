@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xlink="http://www.w3.org/1999/xlink"
     xmlns:xs="http://www.w3.org/2001/XMLSchema" exclude-result-prefixes="xs" version="2.0">
     <xsl:output method="text" encoding="UTF-8"/>
 
@@ -17,33 +17,56 @@
 
     <xsl:variable name="apos">'</xsl:variable>
     <xsl:variable name="quot">"</xsl:variable>
+    
+    <xsl:param name="URI">false</xsl:param>
 
     <xsl:key name="listKey" match="item" use="@name"/>
 
     <xsl:variable name="elements">
         <xsl:for-each select="eacFiles/eacFile">
-            <xsl:for-each select="document(@filename)/eac-cpf//nameEntry[1][part[.!='']]"
+            <xsl:for-each select="document(@filename)/eac-cpf//nameEntry[1]"
                 xpath-default-namespace="urn:isbn:1-931666-33-4">
                 <entry>
                     <xsl:choose>
-                        <xsl:when test="count(part)=1">
+                        <xsl:when test="$URI='true'">
                             <name>
-                                <xsl:value-of select="normalize-space(part)"/>
+                                <xsl:value-of select="//recordId[.!='']"/>                               
                             </name>
+                            <xsl:for-each select="//cpfRelation/relationEntry[.!='']">
+                                <relation>
+                                    <xsl:value-of select="normalize-space(../@xlink:href)"/>
+                                </relation>
+                            </xsl:for-each>
                         </xsl:when>
-                        <xsl:when test="part[@localType='surname'] and part[@localType='forename']">
-                            <name>
-                                <xsl:value-of
-                                    select="concat(normalize-space(part[@localType='surname']),', ',normalize-space(part[@localType='forename']))"
-                                />
-                            </name>
-                        </xsl:when>
-                    </xsl:choose>
-                    <xsl:for-each select="//cpfRelation/relationEntry[.!='']">
-                        <relation>
-                            <xsl:value-of select="normalize-space(.)"/>
-                        </relation>
-                    </xsl:for-each>
+                        <xsl:otherwise>
+                            <xsl:choose>
+                                <xsl:when test="count(part)=1">
+                                    <name>
+                                        <xsl:value-of select="normalize-space(part)"/>
+                                    </name>
+                                </xsl:when>
+                                <xsl:when test="count(part)&gt;1">
+                                    <name>                                        
+                                        <xsl:for-each select="part">                                            
+                                            <xsl:choose>
+                                                <xsl:when test="position()!=last()">
+                                                    <xsl:value-of select="."/>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+                                                    <xsl:value-of select="normalize-space(.)"/>
+                                                </xsl:otherwise>
+                                            </xsl:choose>
+                                        </xsl:for-each>
+                                    </name>
+                                </xsl:when>        
+                            </xsl:choose>
+                            <xsl:for-each select="//cpfRelation/relationEntry[.!='']">
+                                <relation>
+                                    <xsl:value-of select="normalize-space(.)"/>                                    
+                                </relation>
+                            </xsl:for-each>
+                        </xsl:otherwise>                                                
+                    </xsl:choose>                    
                 </entry>
             </xsl:for-each>
         </xsl:for-each>
