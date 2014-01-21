@@ -37,7 +37,14 @@
                                 <xsl:for-each select="part">
                                     <xsl:choose>
                                         <xsl:when test="position()!=last()">
-                                            <xsl:value-of select="."/>
+                                            <xsl:choose>
+                                                <xsl:when test="substring(normalize-space(.),string-length(normalize-space(.)))!=','">
+                                                    <xsl:value-of select="concat(normalize-space(.),', ')"/>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+                                                    <xsl:value-of select="."/>
+                                                </xsl:otherwise>
+                                            </xsl:choose>                                            
                                         </xsl:when>
                                         <xsl:otherwise>
                                             <xsl:value-of select="normalize-space(.)"/>
