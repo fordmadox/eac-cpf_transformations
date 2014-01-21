@@ -23,6 +23,6 @@ The `eac2gml.xsl` stylesheet takes an XML-formatted list of EAC-CPF files (creat
 
    Run eac2gml.xsl on the XML list of files and save the output with a `.gml` extension. The resulting file may now be opened in graph/visualization software such as Gephi (https://gephi.org/).
 
-### TODO
+### 1.4 TODO
 
    Implement URI handling as an alternative to string matching on names.
