@@ -20,6 +20,7 @@
     <xsl:variable name="quot">"</xsl:variable>
 
     <xsl:key name="listKey" match="item" use="@name"/>
+    <xsl:key name="relationFilter" match="cpfRelation/relationEntry" use="tokenize(.,'\s')[1]"/>
 
     <xsl:variable name="elements">
         <xsl:for-each select="eacFiles/eacFile">
@@ -38,13 +39,15 @@
                                     <xsl:choose>
                                         <xsl:when test="position()!=last()">
                                             <xsl:choose>
-                                                <xsl:when test="substring(normalize-space(.),string-length(normalize-space(.)))!=','">
-                                                    <xsl:value-of select="concat(normalize-space(.),', ')"/>
+                                                <xsl:when
+                                                  test="substring(normalize-space(.),string-length(normalize-space(.)))!=','">
+                                                  <xsl:value-of
+                                                  select="concat(normalize-space(.),', ')"/>
                                                 </xsl:when>
                                                 <xsl:otherwise>
-                                                    <xsl:value-of select="."/>
+                                                  <xsl:value-of select="."/>
                                                 </xsl:otherwise>
-                                            </xsl:choose>                                            
+                                            </xsl:choose>
                                         </xsl:when>
                                         <xsl:otherwise>
                                             <xsl:value-of select="normalize-space(.)"/>
@@ -54,7 +57,13 @@
                             </name>
                         </xsl:when>
                     </xsl:choose>
-                    <xsl:for-each select="//cpfRelation/relationEntry[.!='']">
+                    <xsl:for-each
+                        select="../../relations/cpfRelation/relationEntry[.!=''][not(some $creator in ../../resourceRelation/relationEntry[@localType='creator'] satisfies contains(., $creator))]">
+                        <relation>
+                            <xsl:value-of select="normalize-space(.)"/>
+                        </relation>
+                    </xsl:for-each>
+                    <xsl:for-each select="../../description/localDescription[@localType='genre']">
                         <relation>
                             <xsl:value-of select="normalize-space(.)"/>
                         </relation>
