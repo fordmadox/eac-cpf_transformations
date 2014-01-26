@@ -19,8 +19,7 @@
     <xsl:variable name="apos">'</xsl:variable>
     <xsl:variable name="quot">"</xsl:variable>
 
-    <xsl:key name="listKey" match="item" use="@name"/>
-    <xsl:key name="relationFilter" match="cpfRelation/relationEntry" use="tokenize(.,'\s')[1]"/>
+    <xsl:key name="listKey" match="item" use="@name"/>    
 
     <xsl:variable name="elements">
         <xsl:for-each select="eacFiles/eacFile">
