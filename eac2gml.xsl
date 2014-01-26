@@ -20,13 +20,8 @@
     
     <xsl:param name="URI">true</xsl:param>
 
-<<<<<<< HEAD
-    <xsl:key name="listKey" match="item" use="@name"/>    
-=======
     <xsl:key name="listKey" match="item" use="@name"/>
-
     <xsl:key name="listKeyUri" match="item" use="@uri"/>
->>>>>>> development
 
     <xsl:variable name="elements">
         <xsl:for-each select="eacFiles/eacFile">
