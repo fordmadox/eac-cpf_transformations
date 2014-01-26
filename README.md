@@ -25,5 +25,6 @@ The `eac2gml.xsl` stylesheet takes an XML-formatted list of EAC-CPF files (creat
 
 ### 1.4 TODO
 
-   ~~Implement URI handling as an alternative to string matching on names.~~ 
+   ~~Implement URI handling as an alternative to string matching on names.~~
+    
    Handle records with `<multipleIdentities>` elements.
