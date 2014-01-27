@@ -41,7 +41,7 @@
                                         <xsl:for-each select="part">                   
                                             <xsl:choose>
                                                 <xsl:when test="position()!=last()">
-                                                    <xsl:value-of select="normalize-space(.)"/>        
+                                                    <xsl:value-of select="."/>        
                                                 </xsl:when>
                                                 <xsl:otherwise>
                                                     <xsl:value-of select="concat(normalize-space(.),'|',//otherRecordId[.!=''])"></xsl:value-of>
@@ -54,7 +54,7 @@
                             <xsl:for-each
                                 select="../../relations/cpfRelation/relationEntry[.!=''][not(some $creator in ../../resourceRelation/relationEntry satisfies contains(., $creator))]">
                                 <relation uri="{normalize-space(../@xlink:href)}">
-                                    <xsl:value-of select="concat(normalize-space(.),'|',normalize-space(../@xlink:href))"/>
+                                    <xsl:value-of select="concat(normalize-space(.),'|',normalize-space(../@xlink:href),'=',substring-before(following-sibling::descriptiveNote,'.'))"/>
                                 </relation>
                             </xsl:for-each>                            
                         </xsl:when>                       
@@ -104,7 +104,7 @@
 
     <xsl:variable name="list">
         <list>
-            <xsl:for-each-group select="$elements/entry/child::node()" group-by="substring-after(.,'|')">
+            <xsl:for-each-group select="$elements/entry/child::node()" group-by="if (substring-before(substring-after(.,'|'),'=')[.!='']) then substring-before(substring-after(.,'|'),'=') else ()">
                 <xsl:sort select="translate(substring-before(.,'|'),'ÁÉÍÓÚáéíóúÜú','AEIUOaeiouUu')"
                     data-type="text"/>                
                 <xsl:choose>
@@ -131,10 +131,11 @@
                     <xsl:when test="$URI='true'">
                         <xsl:for-each select="current-group()/node()">      
                             <xsl:variable name="nameUriVal" select="substring-after(.,'|')"/>
-                            <xsl:variable name="relationUriVal" select="substring-after(current-grouping-key(),'|')"/>
+                            <xsl:variable name="relationUriVal" select="substring-before(substring-after(current-grouping-key(),'|'),'=')"/>
+                            <xsl:variable name="edgeLabel" select="substring-after(current-grouping-key(),'=')"/>
                             <xsl:for-each select="$list">
                                 <source name="{key('listKeyUri',$nameUriVal)/@name}" uri="{key('listKeyUri',$nameUriVal)/@uri}"
-                                    target="{key('listKeyUri',$relationUriVal)}">
+                                    target="{key('listKeyUri',$relationUriVal)}" edgeLabel="{$edgeLabel}">
                                     <xsl:value-of select="key('listKeyUri',$nameUriVal)"/>
                                 </source>
                             </xsl:for-each>
@@ -157,7 +158,7 @@
         </links>
     </xsl:variable>
 
-    <xsl:template match="/">             
+    <xsl:template match="/">                    
         <xsl:text>graph</xsl:text>
         <xsl:text>&#10;</xsl:text>
         <xsl:text>[</xsl:text>
@@ -181,7 +182,7 @@
             <xsl:text>&#09;</xsl:text>
             <xsl:text>&#09;</xsl:text>
             <xsl:text>label </xsl:text>
-            <xsl:text> "</xsl:text>
+            <xsl:text>"</xsl:text>
             <xsl:value-of select="replace(normalize-space(@name),$quot,$apos)"/>
             <xsl:text>"</xsl:text>
             <xsl:text>&#10;</xsl:text>
@@ -192,6 +193,7 @@
         <xsl:for-each-group select="$links/links/source" group-by="@uri">
             <xsl:for-each select="current-group()/node()">
                 <xsl:variable name="targetVal" select="../@target"/>
+                <xsl:variable name="edgeVal" select="../@edgeLabel"/>
                 <xsl:text>&#09;</xsl:text>
                 <xsl:text>edge</xsl:text>
                 <xsl:text>&#09;</xsl:text>
@@ -213,17 +215,24 @@
                 <xsl:text>&#10;</xsl:text>
                 <xsl:text>&#09;</xsl:text>
                 <xsl:text>&#09;</xsl:text>
+                <xsl:text>label </xsl:text>
+                <xsl:text>"</xsl:text>
+                <xsl:value-of select="concat(replace(normalize-space($edgeVal),$quot,$apos),'.')"/>
+                <xsl:text>" </xsl:text>
+                <xsl:text>&#10;</xsl:text>
+                <xsl:text>&#09;</xsl:text>
+                <xsl:text>&#09;</xsl:text>                
                 <xsl:text>value </xsl:text>
                 <xsl:for-each select="$list">
                     <xsl:value-of select="count(key('listKeyUri',current-grouping-key()))"/>
-                </xsl:for-each>
+                </xsl:for-each>               
                 <xsl:text>&#10;</xsl:text>
                 <xsl:text>&#09;</xsl:text>
                 <xsl:text>]</xsl:text>
                 <xsl:text>&#10;</xsl:text>
             </xsl:for-each>
         </xsl:for-each-group>
-        <xsl:text>]</xsl:text>                     
+        <xsl:text>]</xsl:text>        
     </xsl:template>
 
 </xsl:stylesheet>
